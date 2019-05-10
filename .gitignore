@@ -5,3 +5,11 @@
 *.scm~
 *.scm#*
 .#*.scm
+
+*.so
+*.o
+*.install.sh
+*.build.sh
+*.link
+ssg
+md2html.import.scm

@@ -1,0 +1,15 @@
+((dependencies
+  lowdown
+  optimism
+  srfi-1
+  srfi-13
+  sxml-transforms)
+ (components
+  (extension md2html
+   (csc-options "-O0" "-d3")
+   (modules md2html)
+   (source md2html.scm))
+  (program ssg
+   (csc-options "-O0" "-d3")
+   (component-dependencies md2html)
+   (source ssg.scm))))
