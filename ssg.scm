@@ -7,104 +7,64 @@
 (import srfi-1)
 (import srfi-13)
 (import typed-records)
+(import sxml-transforms)
 
-(import md2html)
+; http://www.more-magic.net/docs/scheme/sxslt.pdf
 
-(define-constant *HELP-OPTS*  '(-h --help))
-(define-constant *DEPTH-OPTS* '(-d --depth))
-(define-constant *DIR-OPTS*   '(-D --directory))
-(define-constant *DO-IT-OPT* '--do-it)
-(define-constant *OPTS*
-                 `(; `-d DEPTH`: max depth to search for files
-                   (,*DEPTH-OPTS* depth)
+(define sem-page
+  `(page "./index.md"
+         (toc
+           (l "../")
+           (l "smth.md"))
+         (h1 "Some title")
+         "This is just an >>example<< to show XHTML & SXML."))
 
-                   ; `-D DIRECTORY`: search for files in DIRECTORY
-                   (,*DIR-OPTS* dir)
+(define (custom-rules)
+  (define (page _ title . content)
+    `(html (@ (lang "en"))
+           (head (link (@ (rel "stylesheet")
+                          (type "text/css")
+                          (href "assets/monokai.css")))
+                 (meta (@ (charset "UTF-8")))
+                 (title ,title))
+           (body ,content)
+           (footer
+             "\nplaces:\n"
+             (a (@ (href "https://github.com/siiky")) "github.com")
+             "\ttest\tthis\tshit")))
 
-                   ; `--do-it`: DO IT!
-                   (,*DO-IT-OPT*)
+  (define (*text* _ str) str)
+  (define (*default* . x) x)
 
-                   ; `-h`: Show help
-                   (,*HELP-OPTS*)))
+  (define (h1 _ title) `(h1 "# " ,title "\n"))
+  (define (h2 _ title) `(h2 "## " ,title "\n"))
+  (define (h3 _ title) `(h3 "### " ,title "\n"))
+  (define (h4 _ title) `(h4 "#### " ,title "\n"))
+  (define (h5 _ title) `(h5 "##### " ,title "\n"))
 
-(defstruct options depth dirs files do-it help)
+  (define (l _ ref)
+    `(a (@ (href ,ref)) ,ref "\n"))
 
-(define (get-opts args)
-  (define (get-files options)
-    (filter (lambda (fname)
-              (and (string-suffix? ".md" fname)
-                   (file-exists? fname)))
-            (append (options-files options)
-                    (append-map
-                      (lambda (dir)
-                        (find-files dir
-                                    #:limit (options-depth options)
-                                    #:test (irregex ".*\\.md$")))
-                      (options-dirs options)))))
+  (define (toc _ . entries)
+    `(ul ,entries))
 
-  (define (kons arg ret)
-    (let ((opt (car arg)))
-      (cond
-        ((memq opt *HELP-OPTS*)
-         (update-options ret #:help #t))
-        ((memq opt *DIR-OPTS*)
-         (update-options ret #:dirs (cons (cadr arg) (options-dirs ret))))
-        ((memq opt *DEPTH-OPTS*)
-         (update-options ret #:depth (string->number (cadr arg))))
-        ((eq? *DO-IT-OPT* opt)
-         (update-options ret #:do-it #t))
-        ((eq? '-- opt)
-         (update-options ret #:files (cdr arg))))))
-
-  (define (parse-args args)
-    (fold kons
-          (make-options #:depth #f #:dirs  '() #:files '()
-                        #:help  #f #:do-it #f)
-          (parse-command-line args *OPTS*)))
-
-  (let* ((options (parse-args args))
-         (options (update-options
-                    options #:dirs
-                    (if (and (null? (options-dirs options))
-                             (null? (options-files options)))
-                        '(".")
-                        (filter directory-exists?
-                                (options-dirs options))))))
-    (update-options options #:files (get-files options))))
-
-(define (do-it! fname)
-  (let ((outfname (pathname-replace-extension fname "html"))
-        (output (md->html fname)))
-    (print "###" fname " -> " outfname ":\n"
-           (cdr output)
-           "\n==="
-           (car output)
-           "\n###")))
-
-(define (help)
-  (print
-    (program-name) " [OPTION...] [--] [FILE...]\n"
-    "   -h --help                  show this help message\n"
-    "   -d --depth DEPTH           max directory recursion depth\n"
-    "   -D --directory DIRECTORY   search for files in this directory\n"
-    "      --do-it                 actually do things"))
-
-(define (usage)
-  (print (program-name) " [-d DEPTH] [-D DIR]... [--do-it] [--] [FILE]..."))
+  `((h1 . ,h1)
+    (h2 . ,h2)
+    (h3 . ,h3)
+    (h4 . ,h4)
+    (h5 . ,h5)
+    (l . ,l)
+    (toc . ,toc)
+    (page . ,page)
+    (*text* . ,*text*)
+    (*default* . ,*default*)))
 
 (define (main args)
-  (let* ((options (get-opts args))
-         (files (options-files options)))
-    (cond
-      ((options-help options)
-       (help))
-      ((null? files)
-       (usage))
-      ((options-do-it options)
-       (for-each do-it! files))
-      (else
-        (print
-          files "\n"
-          "Use `" *DO-IT-OPT* "` to process the files above")))))
+  (with-output-to-file
+    "test.html"
+    (lambda ()
+      (SRV:send-reply
+        (pre-post-order (pre-post-order sem-page (custom-rules))
+                        universal-conversion-rules)))))
 
 (main (command-line-arguments))
