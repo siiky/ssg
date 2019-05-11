@@ -3,7 +3,8 @@
   optimism
   srfi-1
   srfi-13
-  sxml-transforms)
+  sxml-transforms
+  typed-records)
  (components
   (extension md2html
    (csc-options "-O0" "-d3")

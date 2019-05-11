@@ -6,33 +6,80 @@
 (import optimism)
 (import srfi-1)
 (import srfi-13)
+(import typed-records)
 
 (import md2html)
 
-(define-constant *HELP-OPT*  '(-h --help))
-(define-constant *DEPTH-OPT* '(-d --depth))
-(define-constant *DIR-OPT*   '(-D --directory))
+(define-constant *HELP-OPTS*  '(-h --help))
+(define-constant *DEPTH-OPTS* '(-d --depth))
+(define-constant *DIR-OPTS*   '(-D --directory))
 (define-constant *DO-IT-OPT* '--do-it)
 (define-constant *OPTS*
                  `(; `-d DEPTH`: max depth to search for files
-                   (,*DEPTH-OPT* depth)
+                   (,*DEPTH-OPTS* depth)
 
                    ; `-D DIRECTORY`: search for files in DIRECTORY
-                   (,*DIR-OPT* dir)
+                   (,*DIR-OPTS* dir)
 
                    ; `--do-it`: DO IT!
                    (,*DO-IT-OPT*)
 
                    ; `-h`: Show help
-                   (,*HELP-OPT*)))
+                   (,*HELP-OPTS*)))
 
-(: ->bool (* --> boolean))
-(define ->bool (compose not not))
+(defstruct options depth dirs files do-it help)
+
+(define (get-opts args)
+  (define (get-files options)
+    (filter (lambda (fname)
+              (and (string-suffix? ".md" fname)
+                   (file-exists? fname)))
+            (append (options-files options)
+                    (append-map
+                      (lambda (dir)
+                        (find-files dir
+                                    #:limit (options-depth options)
+                                    #:test (irregex ".*\\.md$")))
+                      (options-dirs options)))))
+
+  (define (kons arg ret)
+    (let ((opt (car arg)))
+      (cond
+        ((memq opt *HELP-OPTS*)
+         (update-options ret #:help #t))
+        ((memq opt *DIR-OPTS*)
+         (update-options ret #:dirs (cons (cadr arg) (options-dirs ret))))
+        ((memq opt *DEPTH-OPTS*)
+         (update-options ret #:depth (string->number (cadr arg))))
+        ((eq? *DO-IT-OPT* opt)
+         (update-options ret #:do-it #t))
+        ((eq? '-- opt)
+         (update-options ret #:files (cdr arg))))))
+
+  (define (parse-args args)
+    (fold kons
+          (make-options #:depth #f #:dirs  '() #:files '()
+                        #:help  #f #:do-it #f)
+          (parse-command-line args *OPTS*)))
+
+  (let* ((options (parse-args args))
+         (options (update-options
+                    options #:dirs
+                    (if (and (null? (options-dirs options))
+                             (null? (options-files options)))
+                        '(".")
+                        (filter directory-exists?
+                                (options-dirs options))))))
+    (update-options options #:files (get-files options))))
 
 (define (do-it! fname)
   (let ((outfname (pathname-replace-extension fname "html"))
         (output (md->html fname)))
-    (print "###" fname " -> " outfname ":\n" (cdr output) "\n===" (car output) "\n###")))
+    (print "###" fname " -> " outfname ":\n"
+           (cdr output)
+           "\n==="
+           (car output)
+           "\n###")))
 
 (define (help)
   (print
@@ -40,65 +87,24 @@
     "   -h --help                  show this help message\n"
     "   -d --depth DEPTH           max directory recursion depth\n"
     "   -D --directory DIRECTORY   search for files in this directory\n"
-    "      --do-it                 actually do things\n"))
+    "      --do-it                 actually do things"))
 
 (define (usage)
   (print (program-name) " [-d DEPTH] [-D DIR]... [--do-it] [--] [FILE]..."))
 
-(define (get-dirs parsed-args)
-  (define (dir-opt? arg)
-    (->bool (memq (car arg) *DIR-OPT*)))
-
-  (let ((dirs (map cadr (filter dir-opt? parsed-args))))
-    (if (null? dirs)
-        '(".")
-        (filter directory-exists? dirs))))
-
-(define (should-do-it? parsed-args)
-  (->bool (assoc *DO-IT-OPT* parsed-args)))
-
-(define (get-files dirs parsed-args depth)
-  (filter
-    (lambda (fname)
-      (and (string-suffix? ".md" fname)
-           (file-exists? fname)))
-    (append
-      (cdr (assoc '-- parsed-args))
-      (append-map
-        (lambda (dir)
-          (find-files dir #:limit depth #:test (irregex ".*\\.md$")))
-        dirs))))
-
-(define (get-depth parsed-args)
-  (define (depth-opt? arg)
-    (->bool (memq (car arg) *DEPTH-OPT*)))
-  (fold
-    (lambda (arg ret)
-      (if (depth-opt? arg)
-          (string->number (cadr arg))
-          ret))
-    #f parsed-args))
-
-(define (show-help? parsed-args)
-  (define (help-opt? arg)
-    (->bool (memq (car arg) *HELP-OPT*)))
-  (any help-opt? parsed-args))
-
 (define (main args)
-  (let* ((parsed-args (parse-command-line args *OPTS*))
-         (depth (get-depth parsed-args))
-         (dirs (get-dirs parsed-args))
-         (files (get-files dirs parsed-args depth)))
+  (let* ((options (get-opts args))
+         (files (options-files options)))
     (cond
-      ((show-help? parsed-args)
+      ((options-help options)
        (help))
       ((null? files)
        (usage))
-      ((should-do-it? parsed-args)
+      ((options-do-it options)
        (for-each do-it! files))
       (else
-        (print files)
-        (print "It would be done to the files above")
-        (print "Use `" *DO-IT-OPT* "` to execute")))))
+        (print
+          files "\n"
+          "Use `" *DO-IT-OPT* "` to process the files above")))))
 
 (main (command-line-arguments))

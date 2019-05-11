@@ -12,7 +12,7 @@
   (import sxml-transforms)
 
   (define (print-headers tree)
-    (print "in: " tree)
+    ;(print "in: " tree)
     (cond
       ((null? tree)
        #t)
@@ -35,6 +35,6 @@
     (let ((outfname (pathname-replace-extension fname "html"))
           (content (with-input-from-file fname read-string)))
       (let ((tree (proc-tree content)))
-        (print-headers tree)
+        ;(print-headers tree)
         `(,(with-output-to-string (lambda () (markdown->html content)))
            . ,tree)))))
