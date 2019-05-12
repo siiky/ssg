@@ -3,13 +3,52 @@
 <head>
 <link rel="stylesheet" type="text/css" href="assets/monokai.css" />
 <meta charset="UTF-8" />
-<title>./index.md</title></head>
-<body>
-<ul><a href="../">../
-</a><a href="smth.md">smth.md
-</a></ul>
-<h1># Some title
-</h1>This is just an &gt;&gt;example&lt;&lt; to show XHTML &amp; SXML.</body>
+<title>./test.md</title></head>
+<body>[<img src="https://travis-ci.org/universal-ctags/ctags.svg?branch=master" alt="Build Status" />](https://travis-ci.org/universal-ctags/ctags)
+[<img src="https://scan.coverity.com/projects/4355/badge.svg" alt="Coverity Scan Build Status" />](https://scan.coverity.com/projects/4355)
+[<img src="https://coveralls.io/repos/universal-ctags/ctags/badge.svg?branch=master&amp;service=github" alt="Coverage Status" />](https://coveralls.io/github/universal-ctags/ctags?branch=master)
+[<img src="https://ci.appveyor.com/api/projects/status/6hk2p5lv6jsrd9o7/branch/master?svg=true" alt="Build status" />](https://ci.appveyor.com/project/universalctags/ctags/branch/master)
+[<img src="https://readthedocs.org/projects/ctags/badge" alt="RTD build status" />](http://docs.ctags.io)
+[<img src="https://circleci.com/gh/universal-ctags/ctags.svg?style=shield&amp;circle-token=2e582261da84ebc6d21725b05381f410bc5de29d" alt="CircleCI Build Status" />](https://circleci.com/gh/universal-ctags)universal-ctags has the objective of continuing the development from
+what existed in the Sourceforge area. Github exuberant-ctags
+repository was started by Reza Jelveh and was later moved to the
+universal-ctags organization.The goal of the project is preparing and maintaining common/unified working
+space where people interested in making ctags better can work
+together.
+<h2>## The latest build and package
+</h2>If you want to try the latest universal-ctags without building it yourself...
+<h3>### Windows
+</h3>Daily builds are available at the <a href="https://github.com/universal-ctags/ctags-win32">ctags-win32</a> project.
+Go to the <a href="https://github.com/universal-ctags/ctags-win32/releases">releases</a> page to download zip packages.
+<h3>### Mac
+</h3>See <a href="https://github.com/universal-ctags/homebrew-universal-ctags">Homebrew Tap for Universal Ctags</a>
+<h3>### Docker
+</h3>Go to <a href="https://github.com/universal-ctags/ctags-docker">ctags-docker</a> and follow
+instructions to download the `uctags` script. Docker will automatically fetch
+the image from Docker Hub.
+<h3>### Snap
+</h3>Go to <a href="https://github.com/universal-ctags/ctags-snap">ctags-snap</a> and
+clone the `ctags-snap` repo. Then, follow instructions to build the
+snap package of ctags. Snapcraft will automatically fetch the source
+code from GitHub.
+<h2>## How to build and install
+</h2>To build with Autotools, see `docs/autotools.rst` for more information.
+(To build on GNU/Linux, Autotools is your choice.)
+To build on Windows, see `docs/windows.rst` for more information.
+To build on OSX, see `docs/osx.rst` for more information.
+<h2>## Manual
+</h2>Man page (ctags.1) is generated only in Autotools based building process.
+In addition rst2man command is needed.rst2man is part of the python-docutils package on Ubuntu.
+<h2>## Difference
+</h2>You may be interested in how universal-ctags is different from
+exuberant-ctags. The critical and attractive changes are explained
+in docs/*.rst. The preformatted version is available on line,
+http://docs.ctags.io/.The most significant one is that Universal-ctags doesn't load
+`~/.ctags` and `./.ctags` at starting up time. Instead, it loads
+`~/.ctags.d/*.ctags` and `./.ctags.d/*.ctags`. See the above web
+site and man pages
+(man/ctags.1.rst.in and man/ctags-incompatibilities.7.in in the
+source tree).Pull-requests are welcome!</body>
 <footer>
 places:
 <a href="https://github.com/siiky">github.com</a>	test	this	shit</footer></html>
