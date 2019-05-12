@@ -1,4 +1,8 @@
-((dependencies
+((version "0.1.0")
+ (synopsis "Convert nice looking MD to nice looking HTML")
+ (author "siiky")
+ (license "unlicense")
+ (dependencies
   lowdown
   optimism
   srfi-1

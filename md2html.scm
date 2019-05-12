@@ -58,14 +58,16 @@
   (define (read-md-from-filename filename)
     (with-input-from-file filename read-string))
 
-  (define (md->html input-filename output-filename)
-    (with-output-to-file
-      output-filename
-      (lambda ()
-        (SRV:send-reply
-          (pre-post-order
+  (define (md->html input-filename #!optional (output-filename #f))
+    (let ((output-filename (or output-filename
+                               (pathname-replace-extension input-filename "html"))))
+      (with-output-to-file
+        output-filename
+        (lambda ()
+          (SRV:send-reply
             (pre-post-order
-              `(page ,input-filename ,(markdown->sxml (read-md-from-filename input-filename)))
-              custom-rules)
-            universal-conversion-rules))
-        (newline)))))
+              (pre-post-order
+                `(page ,input-filename ,(markdown->sxml (read-md-from-filename input-filename)))
+                custom-rules)
+              universal-conversion-rules))
+          (newline))))))
