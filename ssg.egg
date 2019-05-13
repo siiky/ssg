@@ -16,6 +16,9 @@
               (types-file)
               (modules md2html)
               (source md2html.scm))
+   (extension fold-args
+              (modules fold-args)
+              (source fold-args.scm))
    (program ssg
-            (component-dependencies md2html)
+            (component-dependencies md2html fold-args)
             (source ssg.scm))))

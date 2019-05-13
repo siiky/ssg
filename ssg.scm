@@ -9,6 +9,7 @@
 (import typed-records)
 
 (import md2html)
+(import fold-args)
 
 (define-constant *DEPTH-OPTS*   '(-d --depth))
 (define-constant *DIR-OPTS*     '(-D --directory))
@@ -46,7 +47,7 @@
                                     #:test (irregex ".*\\.md$")))
                       (options-dirs options)))))
 
-  (define (kons arg ret)
+  (define (kons ret arg)
     (let ((opt (car arg)))
       (cond
         ((memq opt *DEPTH-OPTS*)
@@ -63,10 +64,10 @@
          (update-options ret #:files (cdr arg))))))
 
   (define (parse-args args)
-    (fold kons
-          (make-options #:depth #f #:dirs  '() #:files '()
-                        #:help  #f #:do-it #f #:verbose #f)
-          (parse-command-line args *OPTS*)))
+    (fold-args kons
+               (make-options #:depth #f #:dirs '() #:files '()
+                             #:help  #f #:do-it #f #:verbose #f)
+               *OPTS* args))
 
   (let* ((options (parse-args args))
          (options (update-options
