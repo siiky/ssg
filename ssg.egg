@@ -2,7 +2,7 @@
 ((author "siiky")
  (license "unlicense")
  (synopsis "Convert nice looking MD to nice looking HTML")
- (version "0.0.0")
+ (version "0.0.1")
  (dependencies
    lowdown
    optimism
