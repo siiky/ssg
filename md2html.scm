@@ -7,8 +7,11 @@
   (import chicken.io)
   (import chicken.pathname)
   (import chicken.port)
+  (import chicken.type)
   (import lowdown)
   (import scheme)
+  (import srfi-1)
+  (import srfi-13)
   (import sxml-transforms)
 
   ; http://www.more-magic.net/docs/scheme/sxslt.pdf
@@ -37,8 +40,10 @@
     (define (p _ . content) content)
     (define (l _ ref) `(a (@ (href ,ref)) ,ref "\n"))
     (define (toc _ . entries) `(ul ,entries))
-    ; TODO: Multi line code
-    (define (code _ . content) `("`" ,@content "`"))
+    (define (code _ . content)
+      (if (any (lambda (str) (string-any #\newline str)) content)
+          `(code "```" ,@content "```")
+          `(code "`" ,@content "`")))
 
     `((h1 . ,h1)
       (h2 . ,h2)
@@ -58,6 +63,7 @@
   (define (read-md-from-filename filename)
     (with-input-from-file filename read-string))
 
+  (: md->html (string #!optional string -> void))
   (define (md->html input-filename #!optional (output-filename #f))
     (let ((output-filename (or output-filename
                                (pathname-replace-extension input-filename "html"))))

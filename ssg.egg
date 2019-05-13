@@ -1,20 +1,21 @@
-((version "0.1.0")
- (synopsis "Convert nice looking MD to nice looking HTML")
- (author "siiky")
+; vim: ft=scheme
+((author "siiky")
  (license "unlicense")
+ (synopsis "Convert nice looking MD to nice looking HTML")
+ (version "0.0.0")
  (dependencies
-  lowdown
-  optimism
-  srfi-1
-  srfi-13
-  sxml-transforms
-  typed-records)
+   lowdown
+   optimism
+   srfi-1
+   srfi-13
+   sxml-transforms
+   typed-records)
+ (component-options (csc-options "-O0" "-d3"))
  (components
-  (extension md2html
-   (csc-options "-O0" "-d3")
-   (modules md2html)
-   (source md2html.scm))
-  (program ssg
-   (csc-options "-O0" "-d3")
-   (component-dependencies md2html)
-   (source ssg.scm))))
+   (extension md2html
+              (types-file)
+              (modules md2html)
+              (source md2html.scm))
+   (program ssg
+            (component-dependencies md2html)
+            (source ssg.scm))))
