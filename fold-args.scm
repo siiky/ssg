@@ -7,7 +7,5 @@
   (import optimism)
 
   (define (fold-args kons knil grammar
-                     #!optional
-                     (args (command-line-arguments))
-                     (matcher string=?))
-    (foldl kons knil (parse-command-line matcher args grammar))))
+                     #!optional (args (command-line-arguments)))
+    (foldl kons knil (parse-command-line args grammar))))
