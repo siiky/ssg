@@ -41,16 +41,21 @@
     (define (l _ ref) `(a (@ (href ,ref)) ,ref "\n"))
     (define (toc _ . entries) `(ul ,entries))
     (define (img _ attrs)
-      (let ((attrs (cdr attrs)))
-        (let ((src (cadr (assoc 'src attrs eq?)))
-              (alt (cdr (assoc 'alt attrs eq?))))
-          (let ((alt (string-concatenate `("![" ,@(or alt '("")) "](" ,@(or src '("")) ")"))))
-            `(img (@ (src ,src) (alt ,alt)))))))
+      (let* ((attrs (cdr attrs))
+             (src (cadr (assoc 'src attrs eq?)))
+             (alt (cdr  (assoc 'alt attrs eq?)))
+             (alt (string-concatenate
+                    `("![" ,@(or alt '("")) "](" ,@(or src '("")) ")"))))
+        `(img (@ (src ,src) (alt ,alt)))))
     (define (code _ . content)
       (if (and (not (null? content))
                (any (lambda (str) (string-any #\newline str)) content))
           `(code "```" ,@content "```\n")
           `(code "`" ,@content "`")))
+    (define (strong _ . content)
+      `(strong "**" ,@content "**"))
+    (define (em/i tag . content)
+      `(,tag "_" ,@content "_"))
 
     `((h1 . ,h1)
       (h2 . ,h2)
@@ -61,6 +66,9 @@
       (p . ,p)
       (l . ,l)
       (toc . ,toc)
+      (strong . ,strong)
+      (em . ,em/i)
+      (i . ,em/i)
       (img . ,img)
       (page . ,page)
       (*text* . ,*text*)
@@ -77,11 +85,11 @@
                     #!key
                     (css-filename #f)
                     (css-string #f))
-    (let* ((css (or css-string
-                    (and css-filename
-                         (file-exists? css-filename)
-                         (read-to-string css-filename))))
-           (output-filename (pathname-replace-extension input-filename "html")))
+    (let ((css (or css-string
+                   (and css-filename
+                        (file-exists? css-filename)
+                        (read-to-string css-filename))))
+          (output-filename (pathname-replace-extension input-filename "html")))
       (with-output-to-file
         output-filename
         (lambda ()
