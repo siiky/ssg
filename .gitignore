@@ -12,5 +12,6 @@
 *.build.sh
 *.link
 ssg
+ssg-idx
 *.import.scm
 *.types
