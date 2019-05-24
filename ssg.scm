@@ -1,5 +1,6 @@
 (import chicken.base)
 (import chicken.file)
+(import chicken.file.posix)
 (import chicken.irregex)
 (import chicken.pathname)
 (import chicken.process-context)
@@ -40,16 +41,21 @@
 
 (define (get-opts args)
   (define (get-files options)
-    (filter (lambda (fname)
-              (and (string-suffix? ".md" fname)
-                   (file-exists? fname)))
-            (append (options-files options)
-                    (append-map
-                      (lambda (dir)
-                        (find-files dir
-                                    #:limit (options-depth options)
-                                    #:test (irregex ".*\\.md$")))
-                      (options-dirs options)))))
+    (filter
+      (lambda (fname)
+        (let ((html (pathname-replace-extension fname "html")))
+          (and (string-suffix? ".md" fname)
+               (file-exists? fname)
+               (or (not (file-exists? html))
+                   (> (file-modification-time fname)
+                      (file-modification-time html))))))
+      (append (options-files options)
+              (append-map
+                (lambda (dir)
+                  (find-files dir
+                              #:limit (options-depth options)
+                              #:test (irregex ".*\\.md$")))
+                (options-dirs options)))))
 
   (define (kons ret arg)
     (let ((opt (car arg)))
