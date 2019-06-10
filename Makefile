@@ -1,6 +1,7 @@
 SRC := \
-    ssg.scm \
+    fold-args.scm \
     md2html.scm \
+    ssg.scm \
 
 all:
 	@chicken-install -n
