@@ -5,6 +5,9 @@ SRC := \
 all:
 	@chicken-install -n
 
+install:
+	@chicken-install
+
 list_deps:
 	@ls -1 $(SRC) Makefile ssg.egg
 

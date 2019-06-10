@@ -16,9 +16,6 @@
               (types-file)
               (modules md2html)
               (source md2html.scm))
-   (extension idx2html
-              (modules idx2html)
-              (source idx2html.scm))
    (extension fold-args
               (modules fold-args)
               (source fold-args.scm))
@@ -26,5 +23,5 @@
             (component-dependencies md2html fold-args)
             (source ssg.scm))
    (program ssg-idx
-            (component-dependencies idx2html)
+            (component-dependencies md2html)
             (source ssg-idx.scm))))

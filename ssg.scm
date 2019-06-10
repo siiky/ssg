@@ -16,6 +16,7 @@
 (define-constant *DIR-OPTS*     '(-D --directory))
 (define-constant *DO-IT-OPT*    '--do-it)
 (define-constant *HELP-OPTS*    '(-h --help))
+(define-constant *IDX-OPTS*     '(-i --index))
 (define-constant *STYLE-OPTS*   '(-s --style))
 (define-constant *VERBOSE-OPTS* '(-v --verbose))
 (define-constant *OPTS*
@@ -31,13 +32,16 @@
                    ; `-h`: Show help
                    (,*HELP-OPTS*)
 
+                   ; `-i INDEX-FILE`: Create an HTML file from an index file
+                   (,*IDX-OPTS* . idx-file)
+
                    ; `-s`: Embed css-file in generated HTML
                    (,*STYLE-OPTS* . css-file)
 
                    ; `-v`: show a message on each file it processes
                    (,*VERBOSE-OPTS*)))
 
-(defstruct options depth dirs files do-it help style verbose)
+(defstruct options depth dirs files do-it help style verbose idx)
 
 (define (get-opts args)
   (define (get-files options)
@@ -68,6 +72,8 @@
          (update-options ret #:style (cdr arg)))
         ((memq opt *HELP-OPTS*)
          (update-options ret #:help #t))
+        ((memq opt *IDX-OPTS*)
+         (update-options ret #:idx (cons (cdr arg) (options-idx ret))))
         ((memq opt *VERBOSE-OPTS*)
          (update-options ret #:verbose #t))
         ((eq? *DO-IT-OPT* opt)
@@ -79,7 +85,7 @@
     (fold-args kons
                (make-options #:depth #f #:dirs '() #:files '()
                              #:help  #f #:do-it #f #:style #f
-                             #:verbose #f)
+                             #:verbose #f #:idx '())
                *OPTS* args))
 
   (let* ((options (parse-args args))
@@ -92,9 +98,13 @@
                                 (options-dirs options))))))
     (update-options options #:files (get-files options))))
 
-(define (do-it! fname verbose css-string)
+(define (do-md->html fname verbose css-string)
   (when verbose (print fname))
   (md->html fname css-string: css-string))
+
+(define (do-md->html fname verbose css-string)
+  (when verbose (print fname))
+  (idx->html fname))
 
 (define (help)
   (print
@@ -111,18 +121,18 @@
 
 (define (main args)
   (let* ((options (get-opts args))
-         (files (options-files options)))
+         (files (options-files options))
+         (idxs (options-idx options)))
     (cond
       ((options-help options)
        (help))
-      ((null? files)
+      ((and (null? files) (null? idxs))
        (usage))
       ((options-do-it options)
        (let* ((css (options-style options))
               (css (and css (read-to-string css))))
-         (for-each (lambda (fname)
-                     (do-it! fname (options-verbose options) css))
-                   files)))
+         (for-each (cut do-md->html <> (options-verbose options) css) files)
+         (for-each (cut do-idx->html <> (options-verbose options) css) idxs)))
       (else
         (print
           files "\n"
