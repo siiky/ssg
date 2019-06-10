@@ -16,7 +16,7 @@
 (define-constant *DIR-OPTS*     '(-D --directory))
 (define-constant *DO-IT-OPT*    '--do-it)
 (define-constant *HELP-OPTS*    '(-h --help))
-(define-constant *IDX-OPTS*     '(-i --index))
+(define-constant *IDX-OPTS*     '(|-i| --index)) ; |-i| because chicken reads -i as a complex number
 (define-constant *STYLE-OPTS*   '(-s --style))
 (define-constant *VERBOSE-OPTS* '(-v --verbose))
 (define-constant *OPTS*
@@ -44,15 +44,17 @@
 (defstruct options depth dirs files do-it help style verbose idx)
 
 (define (get-opts args)
+  (define (proc-file? fname ext)
+    (let ((html (pathname-replace-extension fname "html")))
+      (and (string-suffix? ext fname)
+           (file-exists? fname)
+           (or (not (file-exists? html))
+               (> (file-modification-time fname)
+                  (file-modification-time html))))))
+
   (define (get-files options)
     (filter
-      (lambda (fname)
-        (let ((html (pathname-replace-extension fname "html")))
-          (and (string-suffix? ".md" fname)
-               (file-exists? fname)
-               (or (not (file-exists? html))
-                   (> (file-modification-time fname)
-                      (file-modification-time html))))))
+      (cute proc-file? <> ".md")
       (append (options-files options)
               (append-map
                 (lambda (dir)
@@ -60,6 +62,9 @@
                               #:limit (options-depth options)
                               #:test (irregex ".*\\.md$")))
                 (options-dirs options)))))
+
+  (define (get-idx options)
+    (filter (cute proc-file? <> ".scm") (options-idx options)))
 
   (define (kons ret arg)
     (let ((opt (car arg)))
@@ -83,28 +88,31 @@
 
   (define (parse-args args)
     (fold-args kons
-               (make-options #:depth #f #:dirs '() #:files '()
-                             #:help  #f #:do-it #f #:style #f
-                             #:verbose #f #:idx '())
+               (make-options #:depth #f #:help    #f #:do-it #f
+                             #:style #f #:verbose #f
+                             #:dirs '() #:files '() #:idx '())
                *OPTS* args))
 
   (let* ((options (parse-args args))
          (options (update-options
                     options #:dirs
                     (if (and (null? (options-dirs options))
-                             (null? (options-files options)))
+                             (null? (options-files options))
+                             (null? (options-idx options)))
                         '(".")
                         (filter directory-exists?
                                 (options-dirs options))))))
-    (update-options options #:files (get-files options))))
+    (update-options options
+                    #:files (get-files options)
+                    #:idx (get-idx options))))
 
 (define (do-md->html fname verbose css-string)
-  (when verbose (print fname))
+  (when verbose (print "MD -> HTML:\t" fname))
   (md->html fname css-string: css-string))
 
-(define (do-md->html fname verbose css-string)
-  (when verbose (print fname))
-  (idx->html fname))
+(define (do-idx->html fname verbose css-string)
+  (when verbose (print "Index -> HTML:\t" fname))
+  (idx->html fname css-string: css-string))
 
 (define (help)
   (print
@@ -112,6 +120,7 @@
     "   -h --help                  show this help message\n"
     "   -d --depth DEPTH           max directory recursion depth\n"
     "   -D --directory DIRECTORY   search for files in this directory\n"
+    "   -i --index INDEX-FILE      create an HTML file from an index file\n"
     "   -s --style CSS_FILE        embed a CSS file in the generated HTML\n"
     "   -v --verbose               print each filename before processing\n"
     "      --do-it                 actually do things"))
@@ -135,7 +144,8 @@
          (for-each (cut do-idx->html <> (options-verbose options) css) idxs)))
       (else
         (print
-          files "\n"
+          "MD: " files "\n"
+          "Index: " idxs "\n"
           "Use `" *DO-IT-OPT* "` to process the files above")))))
 
 (main (command-line-arguments))

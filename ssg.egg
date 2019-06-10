@@ -21,7 +21,4 @@
               (source fold-args.scm))
    (program ssg
             (component-dependencies md2html fold-args)
-            (source ssg.scm))
-   (program ssg-idx
-            (component-dependencies md2html)
-            (source ssg-idx.scm))))
+            (source ssg.scm))))

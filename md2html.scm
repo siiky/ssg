@@ -157,14 +157,11 @@
                         (read-to-string css-filename)))))
       (lambda (tag title . dirs)
         (assert (eq? tag 'idx))
-        `(page ,title ,css ,@(concatenate (intersperse (map (cut apply dir-func <>) dirs) '("\n")))))))
+        `(page ,title ,css
+               (h1 ,title)
+               ,(concatenate (intersperse (map (cut apply dir-func <>) dirs) '("\n")))))))
 
-  ; TODO: Add CSS support
-  (define (idx->html idx-file)
-    (let* ((html (apply (idx-func) (read-to-list idx-file)))
+  (define (idx->html idx-file #!key (css-filename #f) (css-string #f))
+    (let* ((html (apply (idx-func css-filename: css-filename css-string: css-string) (read-to-list idx-file)))
            (out-file (pathname-replace-extension idx-file "html")))
-      (with-output-to-file
-        out-file
-        (lambda ()
-          (SRV:send-reply (pre-post-order html universal-conversion-rules))
-          (newline))))))
+      (sxml->html-string out-file html))))
