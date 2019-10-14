@@ -1,8 +1,1 @@
-# ssg
-
-```txt
-test this
-code
-```
-
-``
+# `ssg`

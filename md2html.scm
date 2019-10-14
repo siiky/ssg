@@ -46,8 +46,8 @@
                (body ,content)
                (footer
                  "\nplaces:\n"
-                 (a (@ (href "https://github.com/siiky")) "github.com")
-                 "\tthis\tis\ta\ttest"))))
+                 (a (@ (href "https://siiky.github.io")) "Go home!") "\n"
+                 (a (@ (href "https://github.com/siiky")) "GitHub")))))
 
     (define (*text* _ str) str)
     (define (*default* . x) x)
