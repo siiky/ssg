@@ -30,6 +30,10 @@
   (define (read-to-list filename)
     (with-input-from-file filename read))
 
+  (: ->bool (* -> boolean))
+  (define (->bool obj)
+    (not (not obj)))
+
   ;;;
   ;;; SXML rules
   ;;;
@@ -140,6 +144,23 @@
   ;;; Index files
   ;;;
 
+  (define (ent? obj) (and (list? obj) (eq? (car obj) 'ent)))
+  (define (dir? obj) (and (list? obj) (eq? (car obj) 'dir)))
+
+  (define (wip? x) (eq? x 'wip))
+  (define not-wip? (o not wip?))
+
+  (define (list-wip? l) (->bool (any wip? l)))
+  (define not-list-wip? (o not list-wip?))
+
+  (define ent-wip? list-wip?)
+  (define not-ent-wip? (o not list-wip?))
+
+  (define (dir-wip? dir)
+    (or (list-wip? dir)
+        (every ent-wip? (filter ent? dir))))
+  (define not-dir-wip? (o not dir-wip?))
+
   (define (ent-func dir tag fname . rest)
     (assert (eq? tag 'ent))
     (let* ((href (make-pathname dir (pathname-replace-extension fname "html"))))
@@ -148,7 +169,7 @@
   (define (dir-func tag dir . ents)
     (assert (eq? tag 'dir))
     `(,(string-append "\n" dir ":\n")
-       ,@(append (intersperse (map (lambda (ent) (apply ent-func `(,dir ,@ent))) ents) "\n"))))
+       ,@(append (intersperse (map (lambda (ent) (apply ent-func `(,dir ,@ent))) (filter not-ent-wip? ents)) "\n"))))
 
   (define (idx-func #!key (css-filename #f) (css-string #f))
     (let ((css (or css-string
@@ -159,7 +180,7 @@
         (assert (eq? tag 'idx))
         `(page ,title ,css
                (h1 ,title)
-               ,(concatenate (intersperse (map (cut apply dir-func <>) dirs) '("\n")))))))
+               ,(concatenate (intersperse (map (cut apply dir-func <>) (filter not-dir-wip? dirs)) '("\n")))))))
 
   (define (idx->html idx-file #!key (css-filename #f) (css-string #f))
     (let* ((html (apply (idx-func css-filename: css-filename css-string: css-string) (read-to-list idx-file)))
