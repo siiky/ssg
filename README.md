@@ -21,4 +21,4 @@ Example site index:
 
 
 To generate `foo.html`, save the above in a file named `foo.scm` (or any other
-extension other than `.html`) run `ssg -v --do-it -i index.scm`.
+extension other than `.html`) run `ssg -v --do-it -i foo.scm`.
