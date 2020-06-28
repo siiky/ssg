@@ -1,7 +1,10 @@
 SRC := \
-    fold-args.scm \
-    md2html.scm \
-    ssg.scm \
+	md2html.scm \
+	ssg.css.scm \
+	ssg.index.scm \
+	ssg.result.scm \
+	ssg.scm \
+	ssg.site.scm \
 
 all:
 	@chicken-install -n
@@ -12,4 +15,4 @@ install:
 list_deps:
 	@ls -1 $(SRC) Makefile ssg.egg
 
-.PHONY: all list_deps
+.PHONY: all install list_deps
