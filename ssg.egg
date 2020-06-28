@@ -6,7 +6,6 @@
  (dependencies
    lowdown
    messages
-   optimism
    srfi-1
    srfi-13
    sxml-transforms
@@ -14,7 +13,6 @@
  (component-options (csc-options "-O0" "-d3"))
  (components
    (extension md2html (types-file) (modules md2html) (source md2html.scm))
-   (extension fold-args (modules fold-args) (source fold-args.scm))
 
    (extension ssg.css (modules ssg.css) (source ssg.css.scm))
    (extension ssg.index (modules ssg.index) (source ssg.index.scm))
