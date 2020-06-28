@@ -138,7 +138,7 @@
   (define (md->html input-filename #!key (css-filename #f) (css-string #f))
     (sxml->html-string
       (pathname-replace-extension input-filename "html")
-      (md->sxml input-filename css-filename: css-filename css-string: css-string)))
+      (md->sxml input-filename #:css-filename css-filename #:css-string css-string)))
 
   ;;;
   ;;; Index files
@@ -183,6 +183,6 @@
                ,(concatenate (intersperse (map (cut apply dir-func <>) (filter not-dir-wip? dirs)) '("\n")))))))
 
   (define (idx->html idx-file #!key (css-filename #f) (css-string #f))
-    (let* ((html (apply (idx-func css-filename: css-filename css-string: css-string) (read-to-list idx-file)))
+    (let* ((html (apply (idx-func #:css-filename css-filename #:css-string css-string) (read-to-list idx-file)))
            (out-file (pathname-replace-extension idx-file "html")))
       (sxml->html-string out-file html))))
