@@ -10,9 +10,10 @@
    result-ok
    result-ok-value
    result-ok?
-  )
+   result-value-or-error!
+   )
 
-  (import scheme)
+  (import scheme chicken.condition)
 
   (import messages)
 
@@ -43,4 +44,10 @@
 
   (define (result-ok-value result)
     (result-case result (#:ok (value) value)))
+
+  (define (result-value-or-error! result #!optional (error signal))
+    (result-case
+      result
+      (#:ok (site) site)
+      (#:error (reason) (error reason))))
   )

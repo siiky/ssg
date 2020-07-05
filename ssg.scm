@@ -48,21 +48,21 @@
   (define (proc-file? fname ext)
     (let ((html (pathname-replace-extension fname "html")))
       (and (string-suffix? ext fname)
-	   (file-exists? fname)
-	   (or (not (file-exists? html))
-	       (> (file-modification-time fname)
-		  (file-modification-time html))))))
+           (file-exists? fname)
+           (or (not (file-exists? html))
+               (> (file-modification-time fname)
+                  (file-modification-time html))))))
 
   (define (get-files options)
     (filter
       (cute proc-file? <> ".md")
       (append (options-files options)
-	      (append-map
-		(lambda (dir)
-		  (find-files dir
-			      #:limit (options-depth options)
-			      #:test (irregex ".*\\.md$")))
-		(options-dirs options)))))
+              (append-map
+                (lambda (dir)
+                  (find-files dir
+                              #:limit (options-depth options)
+                              #:test (irregex ".*\\.md$")))
+                (options-dirs options)))))
 
   (define (get-idx options)
     (filter (cute proc-file? <> ".scm") (options-idx options)))
@@ -70,42 +70,42 @@
   (define (kons ret arg)
     (let ((opt (car arg)))
       (cond
-	((memq opt *DEPTH-OPTS*)
-	 (update-options ret #:depth (string->number (cdr arg))))
-	((memq opt *DIR-OPTS*)
-	 (update-options ret #:dirs (cons (cdr arg) (options-dirs ret))))
-	((memq opt *STYLE-OPTS*)
-	 (update-options ret #:style (cdr arg)))
-	((memq opt *HELP-OPTS*)
-	 (update-options ret #:help #t))
-	((memq opt *IDX-OPTS*)
-	 (update-options ret #:idx (cons (cdr arg) (options-idx ret))))
-	((memq opt *VERBOSE-OPTS*)
-	 (update-options ret #:verbose #t))
-	((eq? *DO-IT-OPT* opt)
-	 (update-options ret #:do-it #t))
-	((eq? '-- opt)
-	 (update-options ret #:files (cdr arg))))))
+        ((memq opt *DEPTH-OPTS*)
+         (update-options ret #:depth (string->number (cdr arg))))
+        ((memq opt *DIR-OPTS*)
+         (update-options ret #:dirs (cons (cdr arg) (options-dirs ret))))
+        ((memq opt *STYLE-OPTS*)
+         (update-options ret #:style (cdr arg)))
+        ((memq opt *HELP-OPTS*)
+         (update-options ret #:help #t))
+        ((memq opt *IDX-OPTS*)
+         (update-options ret #:idx (cons (cdr arg) (options-idx ret))))
+        ((memq opt *VERBOSE-OPTS*)
+         (update-options ret #:verbose #t))
+        ((eq? *DO-IT-OPT* opt)
+         (update-options ret #:do-it #t))
+        ((eq? '-- opt)
+         (update-options ret #:files (cdr arg))))))
 
   (define (parse-args args)
     (fold-args kons
-	       (make-options #:depth #f #:help    #f #:do-it #f
-			     #:style #f #:verbose #f
-			     #:dirs '() #:files '() #:idx '())
-	       *OPTS* args))
+               (make-options #:depth #f #:help    #f #:do-it #f
+                             #:style #f #:verbose #f
+                             #:dirs '() #:files '() #:idx '())
+               *OPTS* args))
 
   (let* ((options (parse-args args))
-	 (options (update-options
-		    options #:dirs
-		    (if (and (null? (options-dirs options))
-			     (null? (options-files options))
-			     (null? (options-idx options)))
-			'(".")
-			(filter directory-exists?
-				(options-dirs options))))))
+         (options (update-options
+                    options #:dirs
+                    (if (and (null? (options-dirs options))
+                             (null? (options-files options))
+                             (null? (options-idx options)))
+                        '(".")
+                        (filter directory-exists?
+                                (options-dirs options))))))
     (update-options options
-		    #:files (get-files options)
-		    #:idx (get-idx options))))
+                    #:files (get-files options)
+                    #:idx (get-idx options))))
 
 (define (do-md->html fname verbose css-string)
   (when verbose (print "MD -> HTML:\t" fname))
@@ -131,8 +131,8 @@
 
 (define (main args)
   (let* ((options (get-opts args))
-	 (files (options-files options))
-	 (idxs (options-idx options)))
+         (files (options-files options))
+         (idxs (options-idx options)))
     (cond
       ((options-help options)
        (help))
@@ -140,14 +140,14 @@
        (usage))
       ((options-do-it options)
        (let* ((css (options-style options))
-	      (css (and css (read-to-string css))))
-	 (for-each (cut do-md->html <> (options-verbose options) css) files)
-	 (for-each (cut do-idx->html <> (options-verbose options) css) idxs)))
+              (css (and css (read-to-string css))))
+         (for-each (cut do-md->html <> (options-verbose options) css) files)
+         (for-each (cut do-idx->html <> (options-verbose options) css) idxs)))
       (else
-	(print
-	  "MD: " files "\n"
-	  "Index: " idxs "\n"
-	  "Use `" *DO-IT-OPT* "` to process the files above")))))
+        (print
+          "MD: " files "\n"
+          "Index: " idxs "\n"
+          "Use `" *DO-IT-OPT* "` to process the files above")))))
 
 (main (command-line-arguments))
 )
@@ -164,10 +164,6 @@
     )
 
   (define (ssg site)
-    (let ((site
-	    (result-case
-	      site
-	      (#:ok (site) site)
-	      (#:error (reason) (error reason)))))
+    (let ((site (result-value-or-error! site)))
       (result-error 'TODO)))
   )

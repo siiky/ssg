@@ -14,15 +14,26 @@
  (components
    (extension md2html (types-file) (modules md2html) (source md2html.scm))
 
-   (extension ssg.css (modules ssg.css) (source ssg.css.scm))
-   (extension ssg.index (modules ssg.index) (source ssg.index.scm))
-   (extension ssg.result (modules ssg.result) (source ssg.result.scm))
+   (extension ssg.condition (modules ssg.condition) (source ssg.condition.scm))
+   (extension ssg.css       (modules ssg.css)       (source ssg.css.scm))
+   (extension ssg.index     (modules ssg.index)     (source ssg.index.scm))
+   (extension ssg.result    (modules ssg.result)    (source ssg.result.scm))
 
    (extension ssg.site
-	      (component-dependencies ssg.css ssg.index ssg.result)
-	      (modules ssg.site)
-	      (source ssg.site.scm))
+              (modules ssg.site)
+              (source ssg.site.scm)
+              (component-dependencies
+                ssg.condition
+                ssg.css
+                ssg.index
+                ssg.result
+                ))
    (extension ssg
-	      (component-dependencies ssg.result ssg.site)
-	      (modules ssg)
-	      (source ssg.scm))))
+              (modules ssg)
+              (source ssg.scm)
+              (component-dependencies
+                ssg.result
+                ssg.site
+                ))
+   )
+ )
