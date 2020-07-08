@@ -50,7 +50,7 @@
   (define (make-sxml-custom-rules)
     ; TODO: The CSS parameter is ignored... why?
     (define (page _ title css . content)
-      (let ((css (css-content css)))
+      (let ((css (and css `(style ,(css-content css)))))
         `(html (@ (lang "en"))
                (head ,css ; it seems #f is ignored
                      (meta (@ (charset "UTF-8")))

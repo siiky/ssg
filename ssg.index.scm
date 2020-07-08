@@ -41,7 +41,7 @@
 
   (define (index-files index)
     (let* ((ret (idx-dirs index))
-           (ret (map (lambda (d) (cons d (directory-files d))) ret))
+           (ret (map (lambda (dir) (cons dir (directory-files dir))) ret))
            (ret (append-map
                   (lambda (dir/files)
                     (let ((directory (dir-name (car dir/files)))
