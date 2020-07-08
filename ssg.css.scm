@@ -2,16 +2,18 @@
   ssg.css
   *
 
-  (import scheme)
+  (import
+    scheme
+    chicken.base
+    chicken.io
+    )
 
-  (import messages)
+  (define (css-string content)
+    (delay content))
 
-  (define-algebraic-type css (#:string (content string?)) (#:file (path string?)))
-  (define (css-string content) ((css #:string) content))
-  (define (css-file path)      ((css #:file) path))
+  (define (css-file path)
+    (delay (with-input-from-file path read-string)))
+
   (define (css-content css)
-    (css-case
-      css
-      (#:content (content) content)
-      (#:file (path) 'TODO)))
+    (and css (force css)))
   )

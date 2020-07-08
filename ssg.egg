@@ -12,12 +12,19 @@
    typed-records)
  (component-options (csc-options "-O0" "-d3"))
  (components
-   (extension md2html (types-file) (modules md2html) (source md2html.scm))
-
    (extension ssg.condition (modules ssg.condition) (source ssg.condition.scm))
    (extension ssg.css       (modules ssg.css)       (source ssg.css.scm))
    (extension ssg.index     (modules ssg.index)     (source ssg.index.scm))
    (extension ssg.result    (modules ssg.result)    (source ssg.result.scm))
+
+   (extension ssg.md2html
+              (types-file)
+              (modules ssg.md2html)
+              (source ssg.md2html.scm)
+              (component-dependencies
+                ssg.css
+                ssg.index
+                ))
 
    (extension ssg.site
               (modules ssg.site)

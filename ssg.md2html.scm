@@ -1,5 +1,5 @@
 (module
-  md2html
+  ssg.md2html
   (
    idx->html
    md->html
@@ -9,18 +9,25 @@
    sxml->html-string
    )
 
-  (import chicken.base)
-  (import chicken.file)
-  (import chicken.io)
-  (import chicken.pathname)
-  (import chicken.port)
-  (import chicken.string)
-  (import chicken.type)
-  (import lowdown)
-  (import scheme)
-  (import srfi-1)
-  (import srfi-13)
-  (import sxml-transforms)
+  (import
+    scheme
+    chicken.base
+    chicken.file
+    chicken.io
+    chicken.pathname
+    chicken.port
+    chicken.string
+    chicken.type)
+
+  (import lowdown
+          srfi-1
+          srfi-13
+          sxml-transforms)
+
+  (import
+    ssg.css
+    ssg.index
+    )
 
   (: read-to-string (string -> string))
   (define (read-to-string filename)
@@ -40,9 +47,10 @@
 
   ; http://www.more-magic.net/docs/scheme/sxslt.pdf
 
-  (define (make-custom-rules)
+  (define (make-sxml-custom-rules)
+    ; TODO: The CSS parameter is ignored... why?
     (define (page _ title css . content)
-      (let ((css (and css `(style ,css))))
+      (let ((css (css-content css)))
         `(html (@ (lang "en"))
                (head ,css ; it seems #f is ignored
                      (meta (@ (charset "UTF-8")))
@@ -99,7 +107,10 @@
       (*text* . ,*text*)
       (*default* . ,*default*)))
 
-  (define custom-rules (make-custom-rules))
+  (define *sxml-custom-rules*
+    (make-parameter
+      #f
+      (lambda (rules) (assert (or (not rules) (list? rules))) rules)))
 
   ;;;
   ;;; Markdown/SXML/HTML
@@ -110,79 +121,58 @@
   ;; @param css-filename The name of a CSS file
   ;; @param css-string The CSS style ready to be inserted in the resulting HTML
   ;; @returns A page in SXML
-  (define (md->sxml input-filename
-                    #!key
-                    (css-filename #f)
-                    (css-string #f))
-    (let ((css (or css-string
-                   (and css-filename
-                        (file-exists? css-filename)
-                        (read-to-string css-filename)))))
-      `(page ,input-filename ,css ,(markdown->sxml (read-to-string input-filename)))))
+  (define (md->sxml input-filename #!key (css #f))
+    `(page ,input-filename ,css ,(markdown->sxml (read-to-string input-filename))))
 
   ;; @brief Serialize an SXML structure into HTML and write it
   ;; @param output-filename The name of the output file
   ;; @param sxml The SXML structure
-  (define (sxml->html-string output-filename sxml)
+  ; TODO: The SXML Custom Rules parameter is ignored... why?
+  (define (sxml->html-string output-filename sxml #!key (sxml-custom-rules #f))
     (with-output-to-file
       output-filename
       (lambda ()
-        (SRV:send-reply (pre-post-order (pre-post-order sxml custom-rules) universal-conversion-rules))
-        (newline))))
+        (let* ((sxml-custom-rules (or sxml-custom-rules (*sxml-custom-rules*)))
+               (sxml (if sxml-custom-rules (pre-post-order sxml sxml-custom-rules) sxml)))
+          (SRV:send-reply (pre-post-order sxml universal-conversion-rules))
+          (newline)))))
 
   ;; @brief Read a Markdown file and serialize it into HTML
   ;; @param input-filename The name of the Markdown file
   ;; @param css-filename The name of a CSS file
   ;; @param css-string The CSS style ready to be inserted in the resulting HTML
   (: md->html (string #!key string string -> void))
-  (define (md->html input-filename #!key (css-filename #f) (css-string #f))
+  (define (md->html input-filename #!key (css #f) (sxml-custom-rules #f))
     (sxml->html-string
       (pathname-replace-extension input-filename "html")
-      (md->sxml input-filename #:css-filename css-filename #:css-string css-string)))
+      (md->sxml input-filename #:css css)
+      #:sxml-custom-rules sxml-custom-rules))
 
   ;;;
   ;;; Index files
   ;;;
 
-  (define (ent? obj) (and (list? obj) (eq? (car obj) 'ent)))
-  (define (dir? obj) (and (list? obj) (eq? (car obj) 'dir)))
+  (define (ent-func dir ent)
+    (let ((fname (ent-name ent))
+          (date (ent-date ent))
+          (title (ent-title ent)))
+      (let* ((href (make-pathname dir (pathname-replace-extension fname "html"))))
+        `(a (@ (href ,href)) ,(string-intersperse `(,fname ,date ,title) "\t")))))
 
-  (define (wip? x) (eq? x 'wip))
-  (define not-wip? (o not wip?))
+  (define (dir-func dir)
+    (let ((dir (dir-name dir))
+          (ents (dir-ents dir)))
+      `(,(string-append "\n" dir ":\n")
+         ,@(append (intersperse (map (cute ent-func dir <>) (filter (complement ent-wip?) ents)) "\n")))))
 
-  (define (list-wip? l) (->bool (any wip? l)))
-  (define not-list-wip? (o not list-wip?))
+  (define (idx-func index #!key (css #f))
+    (let ((title (idx-title index))
+          (dirs (idx-dirs index)))
+      `(page ,title ,css
+             (h1 ,title)
+             ,(concatenate (intersperse (map dir-func (filter (complement dir-wip?) dirs)) '("\n"))))))
 
-  (define ent-wip? list-wip?)
-  (define not-ent-wip? (o not list-wip?))
-
-  (define (dir-wip? dir)
-    (or (list-wip? dir)
-        (every ent-wip? (filter ent? dir))))
-  (define not-dir-wip? (o not dir-wip?))
-
-  (define (ent-func dir tag fname . rest)
-    (assert (eq? tag 'ent))
-    (let* ((href (make-pathname dir (pathname-replace-extension fname "html"))))
-      `(a (@ (href ,href)) ,(string-intersperse `(,fname ,@rest) "\t"))))
-
-  (define (dir-func tag dir . ents)
-    (assert (eq? tag 'dir))
-    `(,(string-append "\n" dir ":\n")
-       ,@(append (intersperse (map (lambda (ent) (apply ent-func `(,dir ,@ent))) (filter not-ent-wip? ents)) "\n"))))
-
-  (define (idx-func #!key (css-filename #f) (css-string #f))
-    (let ((css (or css-string
-                   (and css-filename
-                        (file-exists? css-filename)
-                        (read-to-string css-filename)))))
-      (lambda (tag title . dirs)
-        (assert (eq? tag 'idx))
-        `(page ,title ,css
-               (h1 ,title)
-               ,(concatenate (intersperse (map (cut apply dir-func <>) (filter not-dir-wip? dirs)) '("\n")))))))
-
-  (define (idx->html idx-file #!key (css-filename #f) (css-string #f))
-    (let* ((html (apply (idx-func #:css-filename css-filename #:css-string css-string) (read-to-list idx-file)))
-           (out-file (pathname-replace-extension idx-file "html")))
-      (sxml->html-string out-file html))))
+  (define (idx->html index index-path #!key (css #f) (sxml-custom-rules #f))
+    (let* ((html (idx-func index #:css css)))
+      (sxml->html-string index-path html #:sxml-custom-rules sxml-custom-rules)))
+  )
