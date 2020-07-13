@@ -48,12 +48,11 @@
   ; http://www.more-magic.net/docs/scheme/sxslt.pdf
 
   (define (make-sxml-custom-rules)
-    ; TODO: The CSS parameter is ignored... why?
     (define (page _ title css . content)
       (let ((css (and css `(style ,(css-content css)))))
         `(html (@ (lang "en"))
-               (head ,css ; it seems #f is ignored
-                     (meta (@ (charset "UTF-8")))
+               (head (meta (@ (charset "UTF-8")))
+                     ,css ; it seems #f is ignored
                      (title ,title))
                (body ,content)
                (footer
@@ -81,7 +80,7 @@
         `(img (@ (src ,src) (alt ,alt)))))
     (define (code _ . content)
       (if (and (not (null? content))
-               (any (lambda (str) (string-any #\newline str)) content))
+               (any (cute string-any #\newline <>) content))
           `(code "```" ,@content "```\n")
           `(code "`" ,@content "`")))
     (define (strong _ . content)
@@ -107,11 +106,6 @@
       (*text* . ,*text*)
       (*default* . ,*default*)))
 
-  (define *sxml-custom-rules*
-    (make-parameter
-      #f
-      (lambda (rules) (assert (or (not rules) (list? rules))) rules)))
-
   ;;;
   ;;; Markdown/SXML/HTML
   ;;;
@@ -127,24 +121,26 @@
   ;; @brief Serialize an SXML structure into HTML and write it
   ;; @param output-filename The name of the output file
   ;; @param sxml The SXML structure
-  ; TODO: The SXML Custom Rules parameter is ignored... why?
   (define (sxml->html-string output-filename sxml #!key (sxml-custom-rules #f))
     (with-output-to-file
       output-filename
       (lambda ()
-        (let* ((sxml-custom-rules (or sxml-custom-rules (*sxml-custom-rules*)))
-               (sxml (if sxml-custom-rules (pre-post-order sxml sxml-custom-rules) sxml)))
-          (SRV:send-reply (pre-post-order sxml universal-conversion-rules))
-          (newline)))))
+        (SRV:send-reply
+          (pre-post-order
+            (if sxml-custom-rules
+                (pre-post-order sxml sxml-custom-rules)
+                sxml)
+            universal-conversion-rules))
+        (newline))))
 
   ;; @brief Read a Markdown file and serialize it into HTML
   ;; @param input-filename The name of the Markdown file
   ;; @param css-filename The name of a CSS file
   ;; @param css-string The CSS style ready to be inserted in the resulting HTML
-  (: md->html (string #!key string string -> void))
-  (define (md->html input-filename #!key (css #f) (sxml-custom-rules #f))
+  (: md->html (string string #!key (or string false) (or string false) -> void))
+  (define (md->html input-filename output-filename #!key (css #f) (sxml-custom-rules #f))
     (sxml->html-string
-      (pathname-replace-extension input-filename "html")
+      output-filename
       (md->sxml input-filename #:css css)
       #:sxml-custom-rules sxml-custom-rules))
 

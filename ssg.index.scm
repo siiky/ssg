@@ -2,7 +2,7 @@
   ssg.index
   *
 
-  (import scheme chicken.base)
+  (import scheme chicken.base chicken.pathname)
 
   (import
     srfi-1
@@ -46,7 +46,7 @@
                   (lambda (dir/files)
                     (let ((directory (dir-name (car dir/files)))
                           (files (cdr dir/files)))
-                      (map (cute string-append directory "/" <>) files)))
+                      (map (o normalize-pathname (cute make-pathname directory <>)) files)))
                   ret)))
       ret))
   )
