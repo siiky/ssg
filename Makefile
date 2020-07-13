@@ -1,7 +1,7 @@
 SRC := \
+	ssg.converters.scm \
 	ssg.css.scm \
 	ssg.index.scm \
-	ssg.md2html.scm \
 	ssg.result.scm \
 	ssg.scm \
 	ssg.site.scm \

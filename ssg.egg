@@ -17,31 +17,31 @@
    (extension ssg.index     (modules ssg.index)     (source ssg.index.scm))
    (extension ssg.result    (modules ssg.result)    (source ssg.result.scm))
 
-   (extension ssg.md2html
+   (extension ssg.converters.pandoc
               (types-file)
-              (modules ssg.md2html)
-              (source ssg.md2html.scm)
-              (component-dependencies
-                ssg.css
-                ssg.index
-                ))
+              (modules ssg.converters.pandoc)
+              (source ssg.converters.pandoc.scm))
+
+   (extension ssg.converters.lowdown
+              (types-file)
+              (modules ssg.converters.lowdown)
+              (source ssg.converters.lowdown.scm)
+              (component-dependencies ssg.css ssg.index))
+
+   (extension ssg.converters
+              (types-file)
+              (modules ssg.converters)
+              (source ssg.converters.scm)
+              (component-dependencies ssg.converters.lowdown))
 
    (extension ssg.site
               (modules ssg.site)
               (source ssg.site.scm)
-              (component-dependencies
-                ssg.condition
-                ssg.css
-                ssg.index
-                ssg.result
-                ))
+              (component-dependencies ssg.condition ssg.css ssg.index ssg.result))
 
    (extension ssg
               (modules ssg)
               (source ssg.scm)
-              (component-dependencies
-                ssg.result
-                ssg.site
-                ))
+              (component-dependencies ssg.result ssg.site))
    )
  )

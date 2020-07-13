@@ -1,5 +1,5 @@
 (module
-  ssg.md2html
+  ssg.converters.lowdown
   (
    idx->html
    md->html
