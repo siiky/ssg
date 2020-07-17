@@ -2,7 +2,7 @@
 ((author "siiky")
  (license "unlicense")
  (synopsis "Static Site Generator")
- (version "0.0.3")
+ (version "0.0.4")
  (dependencies
    lowdown
    messages
@@ -20,7 +20,8 @@
    (extension ssg.converters.pandoc
               (types-file)
               (modules ssg.converters.pandoc)
-              (source ssg.converters.pandoc.scm))
+              (source ssg.converters.pandoc.scm)
+              (component-dependencies ssg.result))
 
    (extension ssg.converters.lowdown
               (types-file)

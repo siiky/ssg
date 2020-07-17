@@ -2,15 +2,25 @@
   ssg.site
   *
 
-  (import scheme chicken.base chicken.pathname chicken.module)
+  (import
+    scheme
+    chicken.base
+    chicken.file
+    chicken.file.posix
+    chicken.pathname
+    )
 
-  (import srfi-1 typed-records)
+  (import
+    srfi-1
+    typed-records
+    )
 
   (import
     ssg.condition
     ssg.css
     ssg.index
-    ssg.result)
+    ssg.result
+    )
 
   (defstruct site
              converter
@@ -32,16 +42,17 @@
       ((make-converter-table (from to ->) ...)
        `(,(make-converter-table-entry #:input-extension from #:output-extension to #:converter ->) ...))))
 
-  (define ((table->converter converter-table) input-filename #!key (css #f) (sxml-custom-rules #f))
+  (define ((table->converter converter-table) idx-file #!key (css #f) (sxml-custom-rules #f))
     (define (converter-not-found input-filename output-filename . _)
       (result-error 'converter-not-found))
 
-    (let* ((input-extension (pathname-extension input-filename))
+    (let* ((input-filename (idx-file-input-filename idx-file))
+           (output-extension (idx-file-output-extension idx-file))
+           (input-extension (pathname-extension input-filename))
            (converter-entry (member input-extension converter-table
                                     (lambda (iext tbl-ent)
                                       (string=? (converter-table-entry-input-extension tbl-ent) iext))))
            (converter-entry (and converter-entry (car converter-entry)))
-           (output-extension (if converter-entry (converter-table-entry-output-extension converter-entry) converter-not-found))
            (output-filename (pathname-replace-extension input-filename output-extension))
            (converter (if converter-entry (converter-table-entry-converter converter-entry) converter-not-found)))
 
@@ -65,28 +76,40 @@
                 (converter-table #f)
                 (css #f)
                 (do-it #f)
+                (force-redo? #f)
                 (index #f)
                 (index-maker #f)
                 (index-path "index.html")
                 (sxml-custom-rules #f)
                 (verbose #f))
-    (let ((condition
-            (lambda (argument)
-              (((exn.ssg.site-condition 'ssg.site:site "Argument missing" argument))
-               'site "Argument missing" argument))))
-      (cond
-        ((not (list? converter-table))     (result-error (condition 'converter-table)))
-        ((not (procedure? index-maker))    (result-error (condition 'index-maker)))
-        ((not (string? index-path))        (result-error (condition 'index-path)))
-        ((not index)                       (result-error (condition 'index)))
-        (else
+
+    (define (should-process-file? idx-file)
+      (let ((input-filename (idx-file-input-filename idx-file))
+            (output-extension (idx-file-output-extension idx-file)))
+        (let ((output-filename (pathname-replace-extension input-filename output-extension)))
+          (or (not (file-exists? output-filename))
+              (> (file-modification-time input-filename)
+                 (file-modification-time output-filename))))))
+
+    (define (condition argument)
+      (((exn.ssg.site-condition 'ssg.site:site "Argument missing" argument))
+       'site "Argument missing" argument))
+
+    (cond
+      ((not (list? converter-table))     (result-error (condition 'converter-table)))
+      ((not (procedure? index-maker))    (result-error (condition 'index-maker)))
+      ((not (string? index-path))        (result-error (condition 'index-path)))
+      ((not index)                       (result-error (condition 'index)))
+      (else
+        (let* ((files (index-files index))
+               (files (if force-redo? files (filter should-process-file? files))))
           (result-ok
             (make-site
               #:converter (table->converter converter-table)
               #:css css
               #:directories (index-directories index)
               #:do-it do-it
-              #:files (index-files index)
+              #:files files
               #:index index
               #:index-maker index-maker
               #:index-path index-path
