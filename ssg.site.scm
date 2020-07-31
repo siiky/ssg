@@ -72,12 +72,14 @@
         #:message site-message)))
 
   (define (index-entries-for-feed index)
-    (index-map-all-entries
-      (lambda (dir ent)
-        (feed-entry (ent-title ent)
-                    (relative-path (dir-name dir)
-                                   (ent-name ent))))
-      index))
+    (filter identity
+            (index-map-all-entries
+              (lambda (dir ent)
+                (and (ent-wip? ent)
+                     (feed-entry (ent-title ent)
+                                 (relative-path (dir-name dir)
+                                                (ent-name ent)))))
+              index)))
 
   (define (site
             #!key
