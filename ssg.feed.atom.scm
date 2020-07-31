@@ -36,13 +36,8 @@
       #:title (atom:make-title title)
       #:updated ""))
 
-  (define (write-feed feed path #!key (declare-xml? #t) (encoding "utf-8") (headers '()))
+  (define (write-feed feed path)
     (with-output-to-file
       path
-      (cut atom:write-atom-doc
-           (atom:make-atom-doc feed
-                               #:declare-xml? declare-xml?
-                               #:encoding encoding
-                               #:headers headers))))
-
+      (cute atom:write-atom-doc (atom:make-atom-doc feed))))
   )

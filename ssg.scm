@@ -19,12 +19,18 @@
             (index (site-index site))
             (index-maker (site-index-maker site))
             (index-path (site-index-path site))
-            (feed (site-feed site)))
+            (feed (site-feed site))
+            (extensions '("html")))
 
         (for-each (cute file-converter <> #:css css #:sxml-custom-rules sxml-custom-rules) files)
         (index-maker index index-path #:css css #:sxml-custom-rules sxml-custom-rules)
 
         ; TODO: Make a feed for each output extension
         (when feed
-          (write-feed (feed-options->feed feed #:extension "html"))))))
+          (let ((write-single-feed
+                  (lambda (extension)
+                    (let* ((feed (feed-options->feed feed #:extension extension))
+                           (path (feed-path feed)))
+                      (write-feed feed path extension)))))
+            (for-each write-single-feed extensions))))))
   )
