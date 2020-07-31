@@ -2,11 +2,17 @@
   ssg.index
   *
 
-  (import scheme chicken.base chicken.pathname)
+  (import
+    scheme
+    chicken.base
+    chicken.pathname)
 
   (import
     srfi-1
     typed-records)
+
+  (import
+    ssg.feed)
 
   (defstruct idx-file input-filename output-extension)
   (defstruct idx title dirs)
@@ -43,19 +49,24 @@
   (define (directory-files directory)
     (map ent-file (dir-ents directory)))
 
+  (define (relative-path directory filename)
+    (normalize-pathname (make-pathname directory filename)))
+
   (define (index-files index)
-    (let* ((ret (idx-dirs index))
-           (ret (map (lambda (dir) `(,(dir-name dir) . ,(directory-files dir))) ret))
-           (ret (append-map
-                  (lambda (dir/files)
-                    (let ((directory (car dir/files))
-                          (files (cdr dir/files)))
-                      (map (lambda (idx-file)
-                             (update-idx-file
-                               idx-file
-                               #:input-filename
-                               (normalize-pathname (make-pathname directory (idx-file-input-filename idx-file)))))
-                           files)))
-                  ret)))
-      ret))
+    (index-map-all-entries
+      (lambda (dir ent)
+        (let ((idx-file (ent-file ent)))
+          (update-idx-file
+            idx-file
+            #:input-filename
+            (relative-path (dir-name dir)
+                           (idx-file-input-filename idx-file)))))
+      index))
+
+  (define (index-map-all-entries func index)
+    (append-map
+      (lambda (dir)
+        (map (lambda (ent) (func dir ent))
+             (dir-ents dir)))
+      (idx-dirs index)))
   )

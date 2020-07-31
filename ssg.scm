@@ -5,6 +5,7 @@
   (import scheme chicken.base chicken.module)
 
   (import
+    ssg.feed
     ssg.result
     ssg.site
     )
@@ -17,7 +18,13 @@
             (files (site-files site))
             (index (site-index site))
             (index-maker (site-index-maker site))
-            (index-path (site-index-path site)))
+            (index-path (site-index-path site))
+            (feed (site-feed site)))
+
         (for-each (cute file-converter <> #:css css #:sxml-custom-rules sxml-custom-rules) files)
-        (index-maker index index-path #:css css #:sxml-custom-rules sxml-custom-rules))))
+        (index-maker index index-path #:css css #:sxml-custom-rules sxml-custom-rules)
+
+        ; TODO: Make a feed for each output extension
+        (when feed
+          (write-feed (feed-options->feed feed #:extension "html"))))))
   )

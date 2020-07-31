@@ -7,26 +7,25 @@
     chicken.base
     chicken.file
     chicken.file.posix
-    chicken.pathname
-    )
+    chicken.pathname)
 
   (import
     srfi-1
-    typed-records
-    )
+    typed-records)
 
   (import
     ssg.condition
     ssg.css
+    ssg.feed
     ssg.index
-    ssg.result
-    )
+    ssg.result)
 
   (defstruct site
              converter
              css
              directories
              do-it
+             feed
              files
              index
              index-maker
@@ -72,16 +71,26 @@
         #:location site-location
         #:message site-message)))
 
-  (define (site #!key
-                (converter-table #f)
-                (css #f)
-                (do-it #f)
-                (force-redo? #f)
-                (index #f)
-                (index-maker #f)
-                (index-path "index.html")
-                (sxml-custom-rules #f)
-                (verbose #f))
+  (define (index-entries-for-feed index)
+    (index-map-all-entries
+      (lambda (dir ent)
+        (feed-entry (ent-title ent)
+                    (relative-path (dir-name dir)
+                                   (ent-name ent))))
+      index))
+
+  (define (site
+            #!key
+            (converter-table #f)
+            (css #f)
+            (do-it #f)
+            (feed #f)
+            (force-redo? #f)
+            (index #f)
+            (index-maker #f)
+            (index-path "index.html")
+            (sxml-custom-rules #f)
+            (verbose #f))
 
     (define (should-process-file? idx-file)
       (let ((input-filename (idx-file-input-filename idx-file))
@@ -96,19 +105,25 @@
        'site "Argument missing" argument))
 
     (cond
-      ((not (list? converter-table))     (result-error (condition 'converter-table)))
-      ((not (procedure? index-maker))    (result-error (condition 'index-maker)))
-      ((not (string? index-path))        (result-error (condition 'index-path)))
-      ((not index)                       (result-error (condition 'index)))
+      ((not (list? converter-table))              (result-error (condition 'converter-table)))
+      ((not (or (not feed) (feed-options? feed))) (result-error (condition 'feed)))
+      ((not (procedure? index-maker))             (result-error (condition 'index-maker)))
+      ((not (string? index-path))                 (result-error (condition 'index-path)))
+      ((not (idx? index))                         (result-error (condition 'index)))
       (else
         (let* ((files (index-files index))
-               (files (if force-redo? files (filter should-process-file? files))))
+               (files (if force-redo? files (filter should-process-file? files)))
+               (feed (update-feed-options
+                       feed
+                       #:title (idx-title index)
+                       #:entries (index-entries-for-feed index))))
           (result-ok
             (make-site
               #:converter (table->converter converter-table)
               #:css css
               #:directories (index-directories index)
               #:do-it do-it
+              #:feed feed
               #:files files
               #:index index
               #:index-maker index-maker

@@ -4,6 +4,7 @@
  (synopsis "Static Site Generator")
  (version "0.0.4")
  (dependencies
+   atom
    lowdown
    messages
    srfi-1
@@ -16,6 +17,18 @@
    (extension ssg.css       (modules ssg.css)       (source ssg.css.scm))
    (extension ssg.index     (modules ssg.index)     (source ssg.index.scm))
    (extension ssg.result    (modules ssg.result)    (source ssg.result.scm))
+
+   (extension ssg.feed.atom
+              (types-file)
+              (modules ssg.feed.atom)
+              (source ssg.feed.atom.scm)
+              (component-dependencies ))
+
+   (extension ssg.feed
+              (types-file)
+              (modules ssg.feed)
+              (source ssg.feed.scm)
+              (component-dependencies ssg.feed.atom ssg.result))
 
    (extension ssg.converters.pandoc
               (types-file)
@@ -38,11 +51,11 @@
    (extension ssg.site
               (modules ssg.site)
               (source ssg.site.scm)
-              (component-dependencies ssg.condition ssg.css ssg.index ssg.result))
+              (component-dependencies ssg.condition ssg.css ssg.feed ssg.index ssg.result))
 
    (extension ssg
               (modules ssg)
               (source ssg.scm)
-              (component-dependencies ssg.result ssg.site))
+              (component-dependencies ssg.feed ssg.result ssg.site))
    )
  )
