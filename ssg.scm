@@ -25,7 +25,6 @@
         (for-each (cute file-converter <> #:css css #:sxml-custom-rules sxml-custom-rules) files)
         (index-maker index index-path #:css css #:sxml-custom-rules sxml-custom-rules)
 
-        ; TODO: Make a feed for each output extension
         (when feed
           (let ((write-single-feed
                   (lambda (extension)
