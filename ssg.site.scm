@@ -75,7 +75,7 @@
     (filter identity
             (index-map-all-entries
               (lambda (dir ent)
-                (and (ent-wip? ent)
+                (and (not (ent-wip? ent))
                      (feed-entry (ent-title ent)
                                  (relative-path (dir-name dir)
                                                 (ent-name ent)))))
