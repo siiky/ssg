@@ -8,8 +8,6 @@ Example site program:
 (import
   (only chicken.process-context command-line-arguments)
 
-  (only srfi-1 member)
-
   (prefix
     (only ssg
           ssg)
@@ -85,7 +83,7 @@ Example site program:
     #:index index
     #:index-maker index-maker
     #:sxml-custom-rules (ssg:lowdown:make-sxml-custom-rules)
-    #:force-redo? (member "--force-redo" (command-line-arguments) string=?)))
+    #:force-redo? (member "--force-redo" (command-line-arguments))))
 ```
 
 This is just a normal CHICKEN program -- you can run it however you want:
