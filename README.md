@@ -83,7 +83,7 @@ Example site program:
     #:index index
     #:index-maker index-maker
     #:sxml-custom-rules (ssg:lowdown:make-sxml-custom-rules)
-    #:force-redo? (member "--force-redo" (command-line-arguments))))
+    #:force-redo? (not (not (member "--force-redo" (command-line-arguments))))
 ```
 
 This is just a normal CHICKEN program -- you can run it however you want:
