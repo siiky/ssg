@@ -41,7 +41,9 @@
       ((make-converter-table (from to ->) ...)
        `(,(make-converter-table-entry #:input-extension from #:output-extension to #:converter ->) ...))))
 
-  (define ((table->converter converter-table) idx-file #!key (css #f) (sxml-custom-rules #f))
+  ; NOTE: Use rest arguments `kargs` instead of specifying key arguments here
+  ;       to support various converters with different key arguments
+  (define ((table->converter converter-table) idx-file . kargs)
     (define (converter-not-found input-filename output-filename . _)
       (result-error 'converter-not-found))
 
@@ -55,7 +57,7 @@
            (output-filename (pathname-replace-extension input-filename output-extension))
            (converter (if converter-entry (converter-table-entry-converter converter-entry) converter-not-found)))
 
-      (converter input-filename output-filename #:css css #:sxml-custom-rules sxml-custom-rules)))
+      (apply converter input-filename output-filename #:resource-path (pathname-directory input-filename) kargs)))
 
   (define (((exn.ssg.site-condition exn-location exn-message exn-arguments)) site-location site-message site-argument)
     (condition

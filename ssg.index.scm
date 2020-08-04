@@ -14,7 +14,7 @@
   (import
     ssg.feed)
 
-  (defstruct idx-file input-filename output-extension)
+  (defstruct idx-file input-filename output-extension title)
   (defstruct idx title dirs)
   (defstruct dir name ents wip?)
   (defstruct ent file name date title wip?)
@@ -57,7 +57,7 @@
       (lambda (dir ent)
         (let ((idx-file (ent-file ent)))
           (update-idx-file
-            idx-file
+            idx-file #:title (ent-title ent)
             #:input-filename
             (relative-path (dir-name dir)
                            (idx-file-input-filename idx-file)))))

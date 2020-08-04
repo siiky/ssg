@@ -8,12 +8,19 @@
     chicken.io
     )
 
+  (import typed-records)
+
+  (defstruct %css path content)
+
   (define (css-string content)
-    (delay content))
+    (make-%css #:path #f #:content (delay content)))
 
   (define (css-file path)
-    (delay (with-input-from-file path read-string)))
+    (make-%css #:path path #:content (delay (with-input-from-file path read-string))))
+
+  (define (css-path css)
+    (and css (%css-path css)))
 
   (define (css-content css)
-    (and css (force css)))
+    (and css (force (%css-content css))))
   )

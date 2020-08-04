@@ -2,6 +2,7 @@
   ssg.converters.lowdown
   (
    idx->html
+   make-sxml-custom-rules
    md->html
    md->sxml
    read-to-list
@@ -47,18 +48,14 @@
 
   ; http://www.more-magic.net/docs/scheme/sxslt.pdf
 
-  (define (make-sxml-custom-rules)
+  (define (make-sxml-custom-rules #!key (lang "en") (charset "UTF-8"))
     (define (page _ title css . content)
       (let ((css (and css `(style ,(css-content css)))))
-        `(html (@ (lang "en"))
-               (head (meta (@ (charset "UTF-8")))
+        `(html (@ (lang ,lang))
+               (head (meta (@ (charset ,charset)))
                      ,css ; it seems #f is ignored
                      (title ,title))
-               (body ,content)
-               (footer
-                 "\nplaces:\n"
-                 (a (@ (href "https://siiky.github.io")) "Go home!") "\n"
-                 (a (@ (href "https://github.com/siiky")) "GitHub")))))
+               (body ,content))))
 
     (define (*text* _ str) str)
     (define (*default* . x) x)

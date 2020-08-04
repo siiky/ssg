@@ -11,6 +11,9 @@
     )
 
   (define (ssg site)
+    (define ((convert-with converter . kargs) idx-file)
+     (apply converter idx-file kargs))
+
     (let ((site (result-value-or-error! site)))
       (let ((css (site-css site))
             (sxml-custom-rules (site-sxml-custom-rules site))
@@ -22,7 +25,7 @@
             (feed (site-feed site))
             (extensions '("html")))
 
-        (for-each (cute file-converter <> #:css css #:sxml-custom-rules sxml-custom-rules) files)
+        (for-each (convert-with file-converter #:css css #:sxml-custom-rules sxml-custom-rules) files)
         (index-maker index index-path #:css css #:sxml-custom-rules sxml-custom-rules)
 
         (when feed
