@@ -24,14 +24,12 @@
              converter
              css
              directories
-             do-it
              feed
              files
              index
              index-maker
              index-path
              sxml-custom-rules
-             verbose
              )
 
   (defstruct converter-table-entry input-extension output-extension converter)
@@ -87,14 +85,12 @@
             #!key
             (converter-table #f)
             (css #f)
-            (do-it #f)
             (feed #f)
             (force-redo? #f)
             (index #f)
             (index-maker #f)
             (index-path "index.html")
-            (sxml-custom-rules #f)
-            (verbose #f))
+            (sxml-custom-rules #f))
 
     (define (should-process-file? idx-file)
       (let ((input-filename (idx-file-input-filename idx-file))
@@ -126,12 +122,10 @@
               #:converter (table->converter converter-table)
               #:css css
               #:directories (index-directories index)
-              #:do-it do-it
               #:feed feed
               #:files files
               #:index index
               #:index-maker index-maker
               #:index-path index-path
-              #:sxml-custom-rules sxml-custom-rules
-              #:verbose verbose))))))
+              #:sxml-custom-rules sxml-custom-rules))))))
   )

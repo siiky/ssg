@@ -77,12 +77,29 @@ Example site program:
 
 (ssg:ssg
   (ssg:site
-    #:feed feed
-    #:converter-table converter-table
-    #:css css
+    ; Description of the website
     #:index index
+
+    ; How to convert each entry
+    #:converter-table converter-table
+
+    ; How to create the index page
     #:index-maker index-maker
+
+    ; OPTIONAL (defaults to "index.html")
+    #:index-path "index.html"
+
+    ; OPTIONAL: Description of the feed, built with `feed-options`
+    #:feed feed
+
+    ; OPTIONAL: Custom CSS file/string to use
+    #:css css
+
+    ; OPTIONAL: Rules to apply before the general SXML->HTML rules
     #:sxml-custom-rules (ssg:lowdown:make-sxml-custom-rules)
+
+    ; OPTIONAL: Force convert, even if the target file is more recent than the
+    ;           source
     #:force-redo? (not (not (member "--force-redo" (command-line-arguments))))
 ```
 
