@@ -4,6 +4,7 @@ SRC := \
 	ssg.converters.pandoc.scm  \
 	ssg.converters.scm         \
 	ssg.css.scm                \
+	ssg.date.scm               \
 	ssg.feed.atom.scm          \
 	ssg.feed.scm               \
 	ssg.index.scm              \
@@ -13,6 +14,7 @@ SRC := \
 
 all:
 	@chicken-install -n
+	@echo DONE
 
 install:
 	@chicken-install

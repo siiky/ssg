@@ -7,6 +7,7 @@
    atom
    lowdown
    messages
+   rfc3339
    srfi-1
    srfi-13
    sxml-transforms
@@ -15,14 +16,14 @@
  (components
    (extension ssg.condition (modules ssg.condition) (source ssg.condition.scm))
    (extension ssg.css       (modules ssg.css)       (source ssg.css.scm))
+   (extension ssg.date      (modules ssg.date)      (source ssg.date.scm))
    (extension ssg.index     (modules ssg.index)     (source ssg.index.scm))
    (extension ssg.result    (modules ssg.result)    (source ssg.result.scm))
 
    (extension ssg.feed.atom
               (types-file)
               (modules ssg.feed.atom)
-              (source ssg.feed.atom.scm)
-              (component-dependencies ))
+              (source ssg.feed.atom.scm))
 
    (extension ssg.feed
               (types-file)

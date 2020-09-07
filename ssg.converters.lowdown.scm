@@ -48,14 +48,16 @@
 
   ; http://www.more-magic.net/docs/scheme/sxslt.pdf
 
-  (define (make-sxml-custom-rules #!key (lang "en") (charset "UTF-8"))
+  (define (make-sxml-custom-rules #!key (lang "en") (charset "UTF-8") (footer #f))
     (define (page _ title css . content)
-      (let ((css (and css `(style ,(css-content css)))))
+      (let ((css (and css `(style ,(css-content css))))
+            (footer (and footer `(footer ,footer))))
         `(html (@ (lang ,lang))
                (head (meta (@ (charset ,charset)))
                      ,css ; it seems #f is ignored
                      (title ,title))
-               (body ,content))))
+               (body ,content)
+               ,footer)))
 
     (define (*text* _ str) str)
     (define (*default* . x) x)

@@ -1,6 +1,10 @@
 (module
   ssg.converters.pandoc
   (
+   *default-extra-options*
+   append-default-extra-options!
+   cons-default-extra-options!
+   filter-default-extra-options!
    md->html
    )
   (import
@@ -16,10 +20,35 @@
     ssg.css
     ssg.result)
 
-  ; TODO: Add the footer.
-  (define (pandoc #!key (cmd "pandoc") (from #f) (to #f) (input #f) (output #f) (css #f) (title #f) (resource-path #f))
+  (define *default-extra-options*
+    ; `--self-contained` implies `-s`
+    (make-parameter '("--self-contained" "-N" "--html-q-tags")))
+
+  (define (cons-default-extra-options! option)
+    (*default-extra-options* (cons option (*default-extra-options*))))
+
+  (define (filter-default-extra-options! option)
+    (*default-extra-options*
+      (filter (complement (cute string=? <> option))
+              (*default-extra-options*))))
+
+  (define (append-default-extra-options! options)
+    (*default-extra-options* (append (*default-extra-options*) options)))
+
+  (define (pandoc
+            #!key
+            (cmd "pandoc")
+            (css #f)
+            (from #f)
+            (input #f)
+            (output #f)
+            (resource-path #f)
+            (title #f)
+            (to #f)
+            )
+
     (define (extra-default-options args)
-      `("--self-contained" "-s" "--html-q-tags" . ,args))
+      (append (*default-extra-options*) args))
 
     (define (add-input input args)
       (if input (cons input args) args))
@@ -36,21 +65,25 @@
 
     ; TODO: Do not silently fail when something fails; e.g., `(css-path css)`
     ;       when `css` is `(css-string ...)`
-    (let* ((args (make-args `(("-f" ,from)
-                              ("-t" ,to)
-                              ("-o" ,output)
-                              ("-c" ,(css-path css)) ; css-path is #f safe
-                              ;("-M" ,(metadata-option "pagetitle" title))
-                              ("-M" ,(metadata-option "title" title))
-                              ("--resource-path" ,resource-path)
-                              ;("--resource-path" ".")
-                              )))
+    (let* ((args `(("-f" ,from)
+                   ("-t" ,to)
+                   ("-o" ,output)
+                   ("-c" ,(css-path css)) ; css-path is #f safe
+                   ("-M" ,(metadata-option "title" title))
+                   ("--resource-path" ,resource-path)))
+           (args (make-args args))
            (args (extra-default-options args))
            (args (add-input input args)))
       (process-run cmd args)))
 
   (define ((-> from to) input-filename output-filename #!key (css #f) (title #f))
-    (let ((pid (pandoc #:from from #:to to #:input input-filename #:output output-filename #:css css #:title title)))
+    (let ((pid (pandoc
+                 #:css css
+                 #:from from
+                 #:input input-filename
+                 #:output output-filename
+                 #:title title
+                 #:to to)))
       (let-values (((pid normal-exit? status) (process-wait pid)))
         (if normal-exit?
             (result-ok #f)
