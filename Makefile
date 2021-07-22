@@ -16,6 +16,9 @@ all:
 	@chicken-install -n
 	@echo DONE
 
+clean:
+	@chicken-clean
+
 install:
 	@chicken-install
 

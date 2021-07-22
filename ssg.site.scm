@@ -43,7 +43,7 @@
   ;       to support various converters with different key arguments
   (define ((table->converter converter-table) idx-file . kargs)
     (define (converter-not-found input-filename output-filename . _)
-      (result-error 'converter-not-found))
+      (result/error 'converter-not-found))
 
     (let* ((input-filename (idx-file-input-filename idx-file))
            (output-extension (idx-file-output-extension idx-file))
@@ -105,11 +105,11 @@
        'site "Argument missing" argument))
 
     (cond
-      ((not (list? converter-table))              (result-error (condition 'converter-table)))
-      ((not (or (not feed) (feed-options? feed))) (result-error (condition 'feed)))
-      ((not (procedure? index-maker))             (result-error (condition 'index-maker)))
-      ((not (string? index-path))                 (result-error (condition 'index-path)))
-      ((not (idx? index))                         (result-error (condition 'index)))
+      ((not (list? converter-table))              (result/error (condition 'converter-table)))
+      ((not (or (not feed) (feed-options? feed))) (result/error (condition 'feed)))
+      ((not (procedure? index-maker))             (result/error (condition 'index-maker)))
+      ((not (string? index-path))                 (result/error (condition 'index-path)))
+      ((not (idx? index))                         (result/error (condition 'index)))
       (else
         (let* ((files (index-files index))
                (files (if force-redo? files (filter should-process-file? files)))
@@ -117,7 +117,7 @@
                        feed
                        #:title (idx-title index)
                        #:entries (index-entries-for-feed index))))
-          (result-ok
+          (result/ok
             (make-site
               #:converter (table->converter converter-table)
               #:css css

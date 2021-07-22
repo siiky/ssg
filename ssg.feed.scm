@@ -68,7 +68,7 @@
                         #:title title)))))
 
                (else
-                 (result-error 'badargs)))))
+                 (result/error 'badargs)))))
       (make-feed
         #:feed feed
         #:path path
@@ -85,5 +85,5 @@
          (atom:write-feed (feed-feed feed) path))
 
         (else
-          (result-error 'badargs)))))
+          (result/error 'badargs)))))
   )

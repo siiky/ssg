@@ -2,6 +2,7 @@
   ssg.converters.pandoc
   (
    *default-extra-options*
+   ->
    append-default-extra-options!
    cons-default-extra-options!
    filter-default-extra-options!
@@ -86,8 +87,8 @@
                  #:to to)))
       (let-values (((pid normal-exit? status) (process-wait pid)))
         (if normal-exit?
-            (result-ok #f)
-            (result-error status)))))
+            (result/ok #f)
+            (result/error status)))))
 
   (define (md->html input-filename output-filename #!key (css #f) (title #f))
     ((-> "markdown" "html") input-filename output-filename #:css css #:title title))
